@@ -242,41 +242,39 @@ def crear_grafo_coretweets(tweets):
         # Comprobar si el tweet es un retweet
         if 'retweeted_status' in tweet and 'user' in tweet:
           author = tweet['retweeted_status']['user']['screen_name']
-          og_tweet = tweet['retweeted_status']['text']
           if author != retweeter:
-            if author not in retweet_dict:
-                retweet_dict[author] = []
-            retweet_dict[author].append((og_tweet, retweeter))
-    # Encontrar pares de tweets retuiteados por el mismo usuario
+            # Actualizar el diccionario de retweets
+            if retweeter not in retweet_dict and author:
+                retweet_dict[retweeter] = []
+            retweet_dict[retweeter].append(author) 
     result = {}  
-    for clave1, tuplas1 in retweet_dict.items():
-        for clave2, tuplas2 in retweet_dict.items():
-            if clave1 != clave2:
-                for tupla1 in tuplas1:
-                    for tupla2 in tuplas2:
-                        if tupla1[1] == tupla2[1] and tupla1[1] != clave2 and tupla2[1] != clave1:
-                            if clave1 not in grafo:
-                                grafo.add_node(clave1)
-                            if clave2 not in grafo:
-                                grafo.add_node(clave2)  
-                            parautores = f"tweet authors: {clave1} and {clave2}"
-                            parautores2 = f"tweet authors: {clave2} and {clave1}"
-                            if parautores not in result and parautores2 not in result:
-                                if grafo.has_edge(clave1, clave2): #En teoria no se deberia dar nunca pero por si acaso
-                                    grafo[clave1][clave2]["weight"] += 1
-                                else: 
-                                    grafo.add_edge(clave1, clave2, weight=1)
-                                result[parautores] = {
-                                    'retweeters': [] 
-                                }
-                                result[parautores]['retweeters'].append(tupla1[1])
-                            elif parautores in result and parautores2 not in result:
-                                 if tupla1[1] not in result[parautores]['retweeters']:
-                                    result[parautores]['retweeters'].append(tupla1[1])
-                                    if grafo.has_edge(clave1, clave2): 
-                                        grafo[clave1][clave2]["weight"] += 1
-                                    else: 
-                                        grafo.add_edge(clave1, clave2, weight=1)
+    for clave, lista in retweet_dict.items():
+        elementos_vistos = []
+        for elemento in lista:
+            if elemento not in elementos_vistos:
+                if elemento != clave:
+                    elementos_vistos.append(elemento)
+        # Almacenar el par en el diccionario de pares iguales
+        combinaciones = combinations(elementos_vistos, 2)
+        for combo in combinaciones:
+            parautores = f"authors: {[combo[0], combo[1]]}"
+            parautores2 = f"authors: {[combo[1], combo[0]]}"
+            if parautores not in result and parautores2 not in result:
+                if grafo.has_edge(combo[0], combo[1]): #En teoria no se deberia dar nunca pero por si acaso
+                    grafo[combo[0]][combo[1]]["weight"] += 1
+                else: 
+                    grafo.add_edge(combo[0], combo[1], weight=1)
+                result[parautores] = {
+                    'retweeters': [] 
+                }
+                result[parautores]['retweeters'].append(clave)
+            elif parautores in result and parautores2 not in result:
+                    if clave not in result[parautores]['retweeters']:
+                        result[parautores]['retweeters'].append(clave)
+                        if grafo.has_edge(combo[0], combo[1]): 
+                            grafo[combo[0]][combo[1]]["weight"] += 1
+                        else: 
+                            grafo.add_edge(combo[0], combo[1], weight=1)
 
     return grafo
 
