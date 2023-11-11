@@ -197,38 +197,39 @@ def crear_grafo_menciones(tweets):
 def crear_json_coretweets(tweets):
     retweet_dict = {} 
     for tweet in tweets:
-        retweeter = tweet['user']['screen_name']  # Supongamos que 'user' es un diccionario con información del usuario
+        retweeter = tweet['user']['screen_name']
 
         # Comprobar si el tweet es un retweet
         if 'retweeted_status' in tweet and 'user' in tweet:
           author = tweet['retweeted_status']['user']['screen_name']
-          og_tweet = tweet['retweeted_status']['text']
           if author != retweeter:
             # Actualizar el diccionario de retweets
-            if author not in retweet_dict and author:
-                retweet_dict[author] = []
-            retweet_dict[author].append((og_tweet, retweeter)) 
+            if retweeter not in retweet_dict and author:
+                retweet_dict[retweeter] = []
+            retweet_dict[retweeter].append(author) 
     result = {}  
-    for clave1, tuplas1 in retweet_dict.items():
-        for clave2, tuplas2 in retweet_dict.items():
-            if clave1 != clave2:
-                for tupla1 in tuplas1:
-                    for tupla2 in tuplas2:
-                        if tupla1[1] == tupla2[1] and tupla1[1] != clave2 and tupla2[1] != clave1:
-                            # Almacenar el par en el diccionario de pares iguales
-                            parautores = f"authors: {[clave1, clave2]}" #Paso de lista a string pq sino se hace el indent y no queda en una sola linea (como pasa con retweeters) y quedaría feo 
-                            parautores2 = f"authors: {[clave2, clave1]}"
-                            if parautores not in result and parautores2 not in result:
-                                result[parautores] = {
-                                    'total coretweets': 0,
-                                    'retweeters': [] 
-                                }
-                                result[parautores]['retweeters'].append(tupla1[1])
-                                result[parautores]['total coretweets'] += 1
-                            elif parautores in result and parautores2 not in result:
-                                if tupla1[1] not in result[parautores]['retweeters']:
-                                    result[parautores]['retweeters'].append(tupla1[1])
-                                    result[parautores]['total coretweets'] += 1
+    for clave, lista in retweet_dict.items():
+        elementos_vistos = []
+        for elemento in lista:
+            if elemento not in elementos_vistos:
+                if elemento != clave:
+                    elementos_vistos.append(elemento)
+        # Almacenar el par en el diccionario de pares iguales
+        combinaciones = combinations(elementos_vistos, 2)
+        for combo in combinaciones:
+            parautores = f"authors: {[combo[0], combo[1]]}"
+            parautores2 = f"authors: {[combo[1], combo[0]]}"
+            if parautores not in result and parautores2 not in result:
+                result[parautores] = {
+                    'total coretweets': 0,
+                    'retweeters': [] 
+                }
+                result[parautores]['retweeters'].append(clave)
+                result[parautores]['total coretweets'] += 1
+            elif parautores in result and parautores2 not in result:
+                if clave not in result[parautores]['retweeters']:
+                    result[parautores]['retweeters'].append(clave)
+                    result[parautores]['total coretweets'] += 1
     sorted_result = dict(sorted(result.items(), key=lambda x: x[1]["total coretweets"], reverse=True))
     return sorted_result
 
