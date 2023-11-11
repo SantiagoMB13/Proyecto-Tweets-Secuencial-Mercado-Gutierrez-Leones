@@ -216,8 +216,8 @@ def crear_json_coretweets(tweets):
                     for tupla2 in tuplas2:
                         if tupla1[1] == tupla2[1] and tupla1[1] != clave2 and tupla2[1] != clave1:
                             # Almacenar el par en el diccionario de pares iguales
-                            parautores = f"tweet authors: {clave1} and {clave2}"
-                            parautores2 = f"tweet authors: {clave2} and {clave1}"
+                            parautores = f"authors: {[clave1, clave2]}"
+                            parautores2 = f"authors: {[clave2, clave1]}"
                             if parautores not in result and parautores2 not in result:
                                 result[parautores] = {
                                     'total coretweets': 0,
