@@ -6,6 +6,7 @@ import argparse
 import time
 from datetime import datetime
 import bz2
+from itertools import combinations
 
 def get_tweets(path, fecha_inicial, fecha_final, hashtags):
     tweets = []
@@ -101,40 +102,49 @@ def crear_grafo_retweets(tweets):
 
 def crear_json_retweets(tweets):
     result = {}
-
+    elements = []
+    guide = {}
+    ind = 0
     for tweet in tweets:
         if 'user' in tweet:
             user_screen_name = tweet["user"]["screen_name"]
 
             if "retweeted_status" in tweet:
                 original_tweet = tweet["retweeted_status"]
-                original_user_screen_name = "user: " + original_tweet["user"]["screen_name"]
+                original_user_screen_name = original_tweet["user"]["screen_name"]
 
                 if original_user_screen_name not in result:
                     result[original_user_screen_name] = {
-                        "received retweets": 0,
+                        'username' : original_user_screen_name, 
+                        "receivedRetweets": 0,
                         "tweets": {}
                     }
-
-                original_tweet_id = "tweet id: " + original_tweet["id_str"]
+                    guide[original_user_screen_name] = ind
+                    ind = ind + 1
+                    elements.append(result[original_user_screen_name])
+                original_tweet_id = "tweetId: " + original_tweet["id_str"]
 
                 if original_tweet_id not in result[original_user_screen_name]["tweets"]:
                     result[original_user_screen_name]["tweets"][original_tweet_id] = {
-                        "retweeted by": []
+                        "retweetedBy": []
                     }
-                if user_screen_name not in result[original_user_screen_name]["tweets"][original_tweet_id]["retweeted by"]:
-                    result[original_user_screen_name]["tweets"][original_tweet_id]["retweeted by"].append(user_screen_name)
-                    result[original_user_screen_name]["received retweets"] += 1
-
+                    elements[guide[original_user_screen_name]] = result[original_user_screen_name] 
+                if user_screen_name not in result[original_user_screen_name]["tweets"][original_tweet_id]["retweetedBy"]:
+                    result[original_user_screen_name]["tweets"][original_tweet_id]["retweetedBy"].append(user_screen_name)
+                    result[original_user_screen_name]["receivedRetweets"] += 1
+                    elements[guide[original_user_screen_name]] = result[original_user_screen_name] 
     # Ordenar el JSON por número total de retweets de mayor a menor
-    sorted_result = dict(sorted(result.items(), key=lambda x: x[1]["received retweets"], reverse=True))
-    return sorted_result
+    sorted_list = sorted(elements, key=lambda x: x['receivedRetweets'], reverse=True)
+    result2 = {'retweets': sorted_list}
+    return result2
 
 
 
 def crear_json_menciones(tweets):
     result = {}
-
+    elements = []
+    guide = {}
+    ind = 0
     for tweet in tweets:
         if 'user' in tweet:
           if "retweeted_status" not in tweet:  # Verificar que no sea un retweet
@@ -142,27 +152,34 @@ def crear_json_menciones(tweets):
                 mentioned_users = [mencion["screen_name"] for mencion in tweet.get("entities", {}).get("user_mentions", [])]
                 repeats = {}
                 for mentioned_user in mentioned_users:
-                  mentioned_user = "user: " + mentioned_user
+                  mentioned_user = mentioned_user
                   if mentioned_user not in repeats: 
                     repeats[mentioned_user] = 1
                     if mentioned_user not in result:
                         result[mentioned_user] = {
-                        "received mentions": 0,
-                        "mentions": {}
-                    }
-                    if user_screen_name not in result[mentioned_user]['mentions']:
-                        result[mentioned_user]['mentions'][user_screen_name] = {
-                            "mention by": user_screen_name,
-                            "tweets": []
+                        "username": mentioned_user,
+                        "receivedMentions": 0,
+                        "mentions": []
                         }
-                        result[mentioned_user]["mentions"][user_screen_name]["tweets"].append(tweet["id_str"])
+                        guide[mentioned_user] = {'index': ind, 'mentioners': {}}
+                        ind = ind + 1
+                        elements.append(result[mentioned_user])
+                    if user_screen_name not in guide[mentioned_user]['mentioners']:
+                        result[mentioned_user]['mentions'].append({
+                            "mentionBy": user_screen_name,
+                            "tweets": []
+                        })
+                        guide[mentioned_user]['mentioners'][user_screen_name] = len(result[mentioned_user]['mentions']) - 1 
+                        result[mentioned_user]["mentions"][guide[mentioned_user]['mentioners'][user_screen_name]]["tweets"].append(tweet["id_str"])
                     else:
-                        result[mentioned_user]["mentions"][user_screen_name]["tweets"].append(tweet["id_str"])
-                    result[mentioned_user]["received mentions"] += 1
+                        result[mentioned_user]["mentions"][guide[mentioned_user]['mentioners'][user_screen_name]]["tweets"].append(tweet["id_str"])
+                    result[mentioned_user]["receivedMentions"] += 1
+                    elements[guide[mentioned_user]['index']] = result[mentioned_user] 
 
     # Ordenar el JSON por número de menciones de mayor a menor
-    sorted_result = dict(sorted(result.items(), key=lambda x: x[1]["received mentions"], reverse=True))
-    return sorted_result
+    sorted_list = sorted(elements, key=lambda x: x['receivedMentions'], reverse=True)
+    result2 = {'mentions': sorted_list}
+    return result2
 
 def crear_grafo_menciones(tweets):
     grafo = nx.DiGraph() 
@@ -196,6 +213,9 @@ def crear_grafo_menciones(tweets):
 
 def crear_json_coretweets(tweets):
     retweet_dict = {} 
+    elements = []
+    guide = {}
+    ind = 0
     for tweet in tweets:
         retweeter = tweet['user']['screen_name']
 
@@ -221,17 +241,23 @@ def crear_json_coretweets(tweets):
             parautores2 = f"authors: {[combo[1], combo[0]]}"
             if parautores not in result and parautores2 not in result:
                 result[parautores] = {
-                    'total coretweets': 0,
+                    'authors':{'u1': combo[0], 'u2': combo[1]},
+                    'totalCoretweets': 0,
                     'retweeters': [] 
                 }
                 result[parautores]['retweeters'].append(clave)
-                result[parautores]['total coretweets'] += 1
+                result[parautores]['totalCoretweets'] += 1
+                guide[parautores] = ind
+                ind = ind + 1
+                elements.append(result[parautores])
             elif parautores in result and parautores2 not in result:
                 if clave not in result[parautores]['retweeters']:
                     result[parautores]['retweeters'].append(clave)
-                    result[parautores]['total coretweets'] += 1
-    sorted_result = dict(sorted(result.items(), key=lambda x: x[1]["total coretweets"], reverse=True))
-    return sorted_result
+                    result[parautores]['totalCoretweets'] += 1
+                    elements[guide[parautores]] = result[parautores] 
+    sorted_list = sorted(elements, key=lambda x: x['totalCoretweets'], reverse=True)
+    result2 = {'retweets': sorted_list}
+    return result2
 
 def crear_grafo_coretweets(tweets):
     grafo = nx.Graph() 
