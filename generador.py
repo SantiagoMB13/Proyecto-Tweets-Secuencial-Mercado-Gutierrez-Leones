@@ -79,18 +79,13 @@ def crear_grafo_retweets(tweets):
     for tweet in tweets:
         if 'user' in tweet:
             user_screen_name = tweet["user"]["screen_name"]
-            tweet_id = tweet["id_str"]
-            tweet_text = tweet["text"]
-
-            if tweet_id not in grafo:
-                grafo.add_node(user_screen_name) 
-
             if "retweeted_status" in tweet:
                 original_tweet = tweet["retweeted_status"]
                 original_user_screen_name = original_tweet["user"]["screen_name"]
-                original_tweet_id = original_tweet["id_str"]
-                if original_tweet_id not in grafo:
+                if original_user_screen_name not in grafo:
                     grafo.add_node(original_user_screen_name) 
+                if user_screen_name not in grafo:
+                    grafo.add_node(user_screen_name) 
                 # Comprobamos si la arista ya existe entre estos usuarios
                 if grafo.has_edge(user_screen_name, original_user_screen_name):
                     grafo[user_screen_name][original_user_screen_name]["weight"] += 1
@@ -188,9 +183,6 @@ def crear_grafo_menciones(tweets):
         if 'user' in tweet:
           if "retweeted_status" not in tweet:  # Verificar que no sea un retweet
             user_screen_name = tweet["user"]["screen_name"]
-            tweet_id = tweet["id_str"]
-            tweet_text = tweet["text"]
-
             mentioned_users = [mencion["screen_name"] for mencion in tweet.get("entities", {}).get("user_mentions", [])]
             repeats = {}
             if user_screen_name not in grafo:
