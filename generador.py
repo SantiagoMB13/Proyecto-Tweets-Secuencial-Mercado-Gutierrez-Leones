@@ -248,7 +248,7 @@ def crear_json_coretweets(tweets):
                     result[parautores]['totalCoretweets'] += 1
                     elements[guide[parautores]] = result[parautores] 
     sorted_list = sorted(elements, key=lambda x: x['totalCoretweets'], reverse=True)
-    result2 = {'retweets': sorted_list}
+    result2 = {'coretweets': sorted_list}
     return result2
 
 def crear_grafo_coretweets(tweets):
