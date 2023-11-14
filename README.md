@@ -2,7 +2,7 @@
 El archivo se probó en Docker con la imagen provista y funcionó (a pesar de que mi codigo de python tenia 2 imports que no tenia el de ejemplo). No me quejo.
 
 Se aprovechó el formato de carpetas y archivos para optimizar las decompresiones cuando hay filtros de fecha_inicial y fecha_final. Esto a su vez significa que el generador.py SOLO funciona en rutas de archivo con la siguiente estructura: path_asignado_con_-d/año/mes/dia/cualquier_path/archivo.bz2.json
-Ej: data/2016/01/01/01/01.bz2.json 
+Ej: Se lee un archivo que esta ubicado en data/2016/01/01/01/01.bz2.json siendo data el path relativo del argumento -d (por defecto es data)
 
 El filtro de fecha_inicial y fecha_final es inclusivo, es decir que si por ejemplo fi es 01/01/2016, se incluiran los tweets del 01/01/2016 en adelante.
 
