@@ -69,7 +69,6 @@ def get_tweets(path, fecha_inicial, fecha_final, hashtags):
                                                     except json.decoder.JSONDecodeError as e:
                                                         print(f"Error de JSON en el archivo: {file_path}")
                                                         print(e)
-    print(len(tweets))
     return tweets
 
 # Crear los grafos y JSON
