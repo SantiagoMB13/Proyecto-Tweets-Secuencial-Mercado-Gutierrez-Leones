@@ -247,6 +247,11 @@ def crear_json_coretweets(tweets):
                     result[parautores]['retweeters'].append(clave)
                     result[parautores]['totalCoretweets'] += 1
                     elements[guide[parautores]] = result[parautores] 
+            elif parautores2 in result and parautores not in result:
+                if clave not in result[parautores2]['retweeters']:
+                    result[parautores2]['retweeters'].append(clave)
+                    result[parautores2]['totalCoretweets'] += 1
+                    elements[guide[parautores2]] = result[parautores2] 
     sorted_list = sorted(elements, key=lambda x: x['totalCoretweets'], reverse=True)
     result2 = {'coretweets': sorted_list}
     return result2
@@ -293,6 +298,13 @@ def crear_grafo_coretweets(tweets):
                             grafo[combo[0]][combo[1]]["weight"] += 1
                         else: 
                             grafo.add_edge(combo[0], combo[1], weight=1)
+            elif parautores2 in result and parautores not in result:
+                    if clave not in result[parautores2]['retweeters']:
+                        result[parautores2]['retweeters'].append(clave)
+                        if grafo.has_edge(combo[1], combo[0]): 
+                            grafo[combo[1]][combo[0]]["weight"] += 1
+                        else: 
+                            grafo.add_edge(combo[1], combo[0], weight=1)
 
     return grafo
 
