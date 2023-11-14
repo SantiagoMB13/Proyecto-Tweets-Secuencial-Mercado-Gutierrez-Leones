@@ -69,6 +69,7 @@ def get_tweets(path, fecha_inicial, fecha_final, hashtags):
                                                     except json.decoder.JSONDecodeError as e:
                                                         print(f"Error de JSON en el archivo: {file_path}")
                                                         print(e)
+    print(len(tweets))
     return tweets
 
 # Crear los grafos y JSON
@@ -79,9 +80,10 @@ def crear_grafo_retweets(tweets):
     for tweet in tweets:
         if 'user' in tweet:
             user_screen_name = tweet["user"]["screen_name"]
-            if "retweeted_status" in tweet:
-                original_tweet = tweet["retweeted_status"]
-                original_user_screen_name = original_tweet["user"]["screen_name"]
+            if "retweeted_status" in tweet and user_screen_name != "null":
+              original_tweet = tweet["retweeted_status"]
+              original_user_screen_name = original_tweet["user"]["screen_name"]
+              if original_user_screen_name != "null":
                 if original_user_screen_name not in grafo:
                     grafo.add_node(original_user_screen_name) 
                 if user_screen_name not in grafo:
@@ -104,10 +106,10 @@ def crear_json_retweets(tweets):
         if 'user' in tweet:
             user_screen_name = tweet["user"]["screen_name"]
 
-            if "retweeted_status" in tweet:
-                original_tweet = tweet["retweeted_status"]
-                original_user_screen_name = original_tweet["user"]["screen_name"]
-
+            if "retweeted_status" in tweet and user_screen_name != "null":
+               original_tweet = tweet["retweeted_status"]
+               original_user_screen_name = original_tweet["user"]["screen_name"]
+               if original_user_screen_name != "null":
                 if original_user_screen_name not in result:
                     result[original_user_screen_name] = {
                         'username' : original_user_screen_name, 
@@ -142,13 +144,12 @@ def crear_json_menciones(tweets):
     ind = 0
     for tweet in tweets:
         if 'user' in tweet:
-          if "retweeted_status" not in tweet:  # Verificar que no sea un retweet
+          if "retweeted_status" not in tweet and tweet["user"]["screen_name"] != "null":  # Verificar que no sea un retweet y que no salga el usuario null (aunque es un usuario real)
                 user_screen_name = tweet["user"]["screen_name"]
                 mentioned_users = [mencion["screen_name"] for mencion in tweet.get("entities", {}).get("user_mentions", [])]
                 repeats = {}
                 for mentioned_user in mentioned_users:
-                  mentioned_user = mentioned_user
-                  if mentioned_user not in repeats: 
+                  if mentioned_user not in repeats and mentioned_user != "null": 
                     repeats[mentioned_user] = 1
                     if mentioned_user not in result:
                         result[mentioned_user] = {
@@ -181,7 +182,7 @@ def crear_grafo_menciones(tweets):
 
     for tweet in tweets:
         if 'user' in tweet:
-          if "retweeted_status" not in tweet:  # Verificar que no sea un retweet
+          if "retweeted_status" not in tweet and tweet["user"]["screen_name"] != "null":  # Verificar que no sea un retweet
             user_screen_name = tweet["user"]["screen_name"]
             mentioned_users = [mencion["screen_name"] for mencion in tweet.get("entities", {}).get("user_mentions", [])]
             repeats = {}
@@ -189,7 +190,7 @@ def crear_grafo_menciones(tweets):
                 grafo.add_node(user_screen_name)
 
             for mentioned_user in mentioned_users:
-              if mentioned_user not in repeats: 
+              if mentioned_user not in repeats and mentioned_user != "null": 
                 repeats[mentioned_user] = 1
                 if mentioned_user not in grafo:
                     grafo.add_node(mentioned_user)
@@ -214,7 +215,7 @@ def crear_json_coretweets(tweets):
         # Comprobar si el tweet es un retweet
         if 'retweeted_status' in tweet and 'user' in tweet:
           author = tweet['retweeted_status']['user']['screen_name']
-          if author != retweeter:
+          if author != retweeter and author != "null" and retweeter != "null":
             # Actualizar el diccionario de retweets
             if retweeter not in retweet_dict and author:
                 retweet_dict[retweeter] = []
@@ -248,7 +249,7 @@ def crear_json_coretweets(tweets):
                     result[parautores]['totalCoretweets'] += 1
                     elements[guide[parautores]] = result[parautores] 
     sorted_list = sorted(elements, key=lambda x: x['totalCoretweets'], reverse=True)
-    result2 = {'coretweets': sorted_list}
+    result2 = {'retweets': sorted_list}
     return result2
 
 def crear_grafo_coretweets(tweets):
@@ -260,7 +261,7 @@ def crear_grafo_coretweets(tweets):
         # Comprobar si el tweet es un retweet
         if 'retweeted_status' in tweet and 'user' in tweet:
           author = tweet['retweeted_status']['user']['screen_name']
-          if author != retweeter:
+          if author != retweeter and author != "null" and retweeter != "null":
             # Actualizar el diccionario de retweets
             if retweeter not in retweet_dict and author:
                 retweet_dict[retweeter] = []
