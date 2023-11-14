@@ -144,7 +144,7 @@ def crear_json_menciones(tweets):
     ind = 0
     for tweet in tweets:
         if 'user' in tweet:
-          if "retweeted_status" not in tweet and tweet["user"]["screen_name"] != "null":  # Verificar que no sea un retweet y que no salga el usuario null (aunque es un usuario real)
+          if "retweeted_status" not in tweet and tweet["user"]["screen_name"] != "null": 
                 user_screen_name = tweet["user"]["screen_name"]
                 mentioned_users = [mencion["screen_name"] for mencion in tweet.get("entities", {}).get("user_mentions", [])]
                 repeats = {}
@@ -249,7 +249,7 @@ def crear_json_coretweets(tweets):
                     result[parautores]['totalCoretweets'] += 1
                     elements[guide[parautores]] = result[parautores] 
     sorted_list = sorted(elements, key=lambda x: x['totalCoretweets'], reverse=True)
-    result2 = {'retweets': sorted_list}
+    result2 = {'coretweets': sorted_list}
     return result2
 
 def crear_grafo_coretweets(tweets):
