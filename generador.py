@@ -283,6 +283,10 @@ def crear_grafo_coretweets(tweets):
             parautores = f"authors: {[combo[0], combo[1]]}"
             parautores2 = f"authors: {[combo[1], combo[0]]}"
             if parautores not in result and parautores2 not in result:
+                if combo[0] not in grafo:
+                    grafo.add_node(combo[0])
+                if combo[1] not in grafo:
+                    grafo.add_node(combo[1])
                 if grafo.has_edge(combo[0], combo[1]): #En teoria no se deberia dar nunca pero por si acaso
                     grafo[combo[0]][combo[1]]["weight"] += 1
                 else: 
