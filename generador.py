@@ -24,7 +24,7 @@ def get_tweets(path, fecha_inicial, fecha_final, hashtags):
                                             if fecha_inicial.date()<=tweet_created_at.date()<=fecha_final.date():
                                               if hashtags:
                                                 if tweet["entities"]["hashtags"]:
-                                                    hashtexts = [hashtag["text"] for hashtag in tweet["entities"]["hashtags"]]
+                                                    hashtexts = [hashtag["text"].lower() for hashtag in tweet["entities"]["hashtags"]]
                                                     added = 0
                                                     if (any(item in hashtexts for item in hashtags) and added==0): #Para que no se guarde varias veces el mismo tweet
                                                         tweets.append(tweet)
